@@ -134,5 +134,14 @@ def search_market_data(request):
     return JsonResponse({"query_results": [q.serialize() for q in query_results]}, safe=False)
 
 
+# Search Single Market Data by CNPJ
+@csrf_exempt
+def search_single_market_data_by_cnpj(request):
+    data = json.loads(request.body)
+    cnpj = data.get("cnpj")
+    fund = InvestmentFund.objects.filter(cnpj=cnpj)
+    return JsonResponse(fund.serialize(), safe=False)
+
+
 
 

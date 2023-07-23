@@ -2,40 +2,204 @@
 {% load static %}
 
 {% block body %}
-    <div class="col-12">
-        <div class="main-div col-12">
-            <div class="col-12 align-items-center justify-content-center text-center">
-                <form class="col-12">
-                    <input type="search" id="search-data" class="search-data col-12 form-control" name="search" placeholder="Search...">
-                    <div id="search-results"></div>
-                    <div class="date-form form-row d-flex">
-                        <div class="form-group col-6 col-sm-12 col-md-4 col-lg-2">
-                            <input type="button" value="First start" class="date-option form-control">
-                        </div>
-                        <div class="form-group col-6 col-sm-12 col-md-4 col-lg-2">
-                            <input type="button" value="Common start" class="date-option form-control">
-                        </div>
-                        <div class="form-group col-6 col-sm-12 col-md-4 col-lg-2">
-                            <input type="button" value="6 Months" class="date-option form-control">
-                        </div>
-                        <div class="form-group col-6 col-sm-12 col-md-4 col-lg-2">
-                            <input type="button" value="12 Months" class="date-option form-control">
-                        </div>
-                        <div class="form-group col-6 col-sm-12 col-md-4 col-lg-2">
-                            <input type="button" value="2 Years" class="date-option form-control">
-                        </div>
-                        <div class="date-div form-group col-6 col-sm-12 col-md-4 col-lg-2">
-                            <input type="button" value="Personalized" class="date-option form-control">
-                        </div>
+    <div id="root"></div>
+    <script type="text/babel">
+
+        function App() {
+            const searchBoxRef = React.useRef(null);
+            const [selectedMarketData, setSelectedMarketData] = React.useState([]);
+            const [queryMarketData, setQueryMarketData] = React.useState([])
+
+            const MARKET_COLORS = [
+                "#CC0000", // dark red
+                "#00DC7D", // dark sea-green
+                "#006EDC", // blue
+                "#CA00C3", // dark pink
+                "#BCEB00", // lime
+                "#3399FF", // sky blue
+                "#CC6600", // dark orange
+                "#5100DC", // purple
+                "#FF33CC", // bright pink
+                "#DCDC00", // dark yellow
+                "#FF6600", // bright orange
+                "#FFCC00", // yellow
+                "#00FF99", // mint green
+                "#9900CC", // deep purple
+                "#00FFFF", // cyan
+                "#FF3399", // magenta
+                "#FF9933", // gold
+                "#00CC66", // green
+                "#990033", // dark burgundy
+            ];
+
+            const addMarketData = (data) => {
+                const id = data.cnpj;
+                const usedColors = selectedMarketData.map((info) => Object.values(info)[0].color);
+                const availableColors = MARKET_COLORS.filter((color) => !usedColors.includes(color));
+
+                if (availableColors.length === 0) {
+                    console.log("No available colors.");
+                    return;
+                }
+
+                const colorToAdd = availableColors[0];
+                setSelectedMarketData((prevState) => [
+                    ...prevState,
+                    { [id]: { data: data, color: colorToAdd } },
+                ]);
+                console.log(`Added "${id}" to selected market data with color "${colorToAdd}"`);
+                searchBoxRef.current.value = "";
+                setQueryMarketData([]);
+            };
+
+            const removeMarketData = (id) => {
+                setSelectedMarketData((prevState) =>
+                    prevState.filter((item) => Object.keys(item)[0] !== id)
+                );
+                console.log(`Removed "${id}" from selected market data.`)
+            }
+
+            const searchMarketData = () => {
+                const searchTerm = searchBoxRef.current.value;
+
+                if (searchTerm === ''){
+                    setQueryMarketData([])
+                    console.log(`Search term erased. No search required.`)
+                } else {
+                    console.log(`Searching for "${searchTerm}"...`)
+                    const data = {
+                        query: searchTerm
+                    };
+                    fetch('/search-market-data', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => response.json())
+                    .then(results => {
+                        console.log(results);
+                        setQueryMarketData(results.query_results)
+                    });
+                }
+
+                return;
+            }
+
+            return (
+                <Comparator
+                    searchBoxRef={searchBoxRef}
+                    searchMarketData={searchMarketData}
+                    queryMarketData={queryMarketData}
+                    addMarketData={addMarketData}
+                    selectedMarketData={selectedMarketData}
+                    removeMarketData={removeMarketData}
+                />
+            );
+        }
+
+        function Comparator(props) {
+            return (
+                <div>
+                    <h1>Funds Intel</h1>
+                    <SearchBox
+                        searchBoxRef={props.searchBoxRef}
+                        searchMarketData={props.searchMarketData}
+                        queryMarketData={props.queryMarketData}
+                        addMarketData={props.addMarketData}
+                    />
+                    <hr class="my-4"></hr>
+                    <SelectedSearch 
+                        selectedMarketData={props.selectedMarketData}
+                        removeMarketData={props.removeMarketData}
+                    />
+                    <Graphic />
+                </div>
+            );
+        }
+
+        function SearchBox(props) {
+            return (
+                <div>
+                    <input
+                        ref={props.searchBoxRef}
+                        onChange={props.searchMarketData}
+                        type="search"
+                        id="search-data"
+                        className="col-12 form-control"
+                        name="search"
+                        placeholder="Search..."
+                    />
+                    {props.queryMarketData.map((data, index) => (
+                        <SingleMarketData
+                            index={index}
+                            data={data}
+                            addMarketData={props.addMarketData}
+                        />
+                    ))}
+                </div>
+            );
+        }
+
+        function SingleMarketData(props) {
+            return(
+                <div class="form-control" onClick={() => props.addMarketData(props.data)}>
+                    <h6>{props.data.short_name}</h6>
+                    <span>{props.data.cnpj}</span>
+                </div>
+            )
+        }
+
+        function SelectedSearch(props) {
+            return (
+                <div>
+                    {props.selectedMarketData.map((info, index) => (
+                        <SingleSelectedMarketData
+                            index={index}
+                            info={info}
+                            removeMarketData={props.removeMarketData}
+                        />
+                    ))}
+                </div>
+            );
+        }
+
+        function SingleSelectedMarketData(props) {
+            const info = Object.values(props.info)[0]
+            const textStyle = {color: info.color};
+            return(
+                <div class="form-control">
+                    <h3 style={textStyle}>{info.data.short_name}</h3>
+                    <h6 style={textStyle}>
+                        {info.data.cnpj}
+                    </h6>
+                    {info.data.class_cvm !== null && info.data.class_cvm.trim() !== "" && (
+                        <h6>{info.data.class_cvm}</h6>
+                    )}
+                    <div class="btn-group" role="group" aria-label="Basic example">
+                        <button
+                            type="button"
+                            class="btn btn-primary"
+                        >
+                            View
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            onClick={() => props.removeMarketData(info.data.cnpj)}
+                        >
+                            Remove
+                        </button>
                     </div>
-                    <div id="selected-market-data-container" class="col-12" data-numberselected="0"></div>
-                </form>
-                <form class="col-12 d-flex justify-content-center align-items-center">
-                    <canvas id="comparison-graphic-main" class="col-12 mx-auto" style="width: 100%; max-width: 850px; max-height: 500px;"></canvas>
-                </form>
-            </div>
-        </div>
-    </div>
+                </div>
+            )
+        }
+
+        function Graphic() {
+            return (<div></div>);
+        }
+
+        ReactDOM.render(<App />, document.getElementById("root"));
+    </script>
 {% endblock %}
-
-
