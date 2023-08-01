@@ -77,7 +77,8 @@ def transform_daily_info_to_sql(
             "RESG_DIA": "rescue_value",
             "NR_COTST": "shareholders",
         }, axis=1, inplace=True)
-        monthly_info.drop("fund_type", axis=1, inplace=True)
+        if 'fund_type' in list(monthly_info.columns):
+            monthly_info.drop("fund_type", axis=1, inplace=True)
         monthly_info.to_sql('daily_info', conn, if_exists='append', index=False)
         conn.commit()
         logging.info(f"Added daily information from '{monthly_file}' to 'daily_info' table")

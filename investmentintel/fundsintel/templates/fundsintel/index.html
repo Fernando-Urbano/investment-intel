@@ -210,24 +210,26 @@
             return (
                 <div>
                     <h1>Funds Intel</h1>
-                    <SearchBox
-                        searchBoxRef={props.searchBoxRef}
-                        searchMarketData={props.searchMarketData}
-                        queryMarketData={props.queryMarketData}
-                        addMarketData={props.addMarketData}
-                    />
-                    <hr className="my-2"></hr>
-                    <SelectedSearch 
-                        selectedMarketData={props.selectedMarketData}
-                        removeMarketData={props.removeMarketData}
-                    />
-                    <hr className="my-2"></hr>
-                    <Analytics
-                        cumulativeReturnsData={props.cumulativeReturnsData}
-                        selectedMarketData={props.selectedMarketData}
-                        setAnalyticsParams={props.setAnalyticsParams}
-                        analyticsParams={props.analyticsParams}
-                    />
+                    <div className="mr-3 ml-3 p-3">
+                        <SearchBox
+                            searchBoxRef={props.searchBoxRef}
+                            searchMarketData={props.searchMarketData}
+                            queryMarketData={props.queryMarketData}
+                            addMarketData={props.addMarketData}
+                        />
+                        <hr className="my-2"></hr>
+                        <SelectedSearch 
+                            selectedMarketData={props.selectedMarketData}
+                            removeMarketData={props.removeMarketData}
+                        />
+                        <hr className="my-2"></hr>
+                        <Analytics
+                            cumulativeReturnsData={props.cumulativeReturnsData}
+                            selectedMarketData={props.selectedMarketData}
+                            setAnalyticsParams={props.setAnalyticsParams}
+                            analyticsParams={props.analyticsParams}
+                        />
+                    </div>
                 </div>
             );
         }
@@ -400,7 +402,7 @@
 
             return (
                 <div>
-                    <div className="btn-group" role="group" aria-label="Basic example">
+                    <div className="btn-group d-flex justify-content-center" role="group" aria-label="Basic example">
                         {Object.entries(selectedPeriod).map(([buttonName, buttonSelected]) => (
                             <button
                                 key={buttonName}
@@ -435,7 +437,7 @@
             const [warningDateMessage, setWarningDateMessage] = React.useState({invalidDate: false, startAfterEndDate: false})
             
             return (
-                <div className="form-group">
+                <div className="form-group justify-content-center">
                     <label htmlFor="personalized-start-date">Start date: </label>
                     <input
                         type="date"
@@ -479,7 +481,7 @@
                     <button
                         key="selectPersonalized"
                         type="button"
-                        className="btn btn-primary"
+                        className="btn btn-primary mt-1"
                         onClick={() => {
                             if (!(isValidDate(props.startDate)) || !(isValidDate(props.startDate))){
                                 console.log('Start date or end date has invalid format')
@@ -605,26 +607,30 @@
                 });
                 console.log('Updated chart data for cumulative returns graphic.')
             }, [props.cumulativeReturnsData]);
+
+            const chartStyle = {height:'100px'}
     
             return (
-                <div className="col-12">
-                    <h5>Cumulative Returns</h5>
+                <div>
+                <h5>Cumulative Returns</h5>
+                <div className='d-flex justify-content-center'>
                     {chartData !== {} ? (
-                        <div className='d-flex flex-column align-items-center'>
+                        <div className='col-sm-11 col-md-9 col-lg-6' >
                             <ReactChartjs2.Line data={chartData} options={options} />
                         </div>
                     ) : (
-                        <div className='d-flex flex-column align-items-center'>
+                        <div className='col-sm-11 col-md-9 col-lg-6' >
                             <ReactChartjs2.Line options={options} />
                         </div>
                     )}
                 </div>
+            </div>
             );
         }
 
         function ReturnsGraphic(props) {
             const options = {
-                responsive: true,
+                responsive: false,
                 legend: {
                     display: false,
                 },
@@ -704,15 +710,15 @@
             }, [props.cumulativeReturnsData]);
     
             return (
-                <div className="col-12">
+                <div>
                     <h5>Cumulative Returns</h5>
                     {chartData !== {} ? (
-                        <div className='d-flex flex-column align-items-center'>
-                            <ReactChartjs2.Line data={chartData} options={options} />
+                        <div className='col-4'>
+                            <ReactChartjs2.Line data={chartData} options={options}/>
                         </div>
                     ) : (
-                        <div className='d-flex flex-column align-items-center'>
-                            <ReactChartjs2.Line options={options} />
+                        <div className='col-4'>
+                            <ReactChartjs2.Line options={options}/>
                         </div>
                     )}
                 </div>

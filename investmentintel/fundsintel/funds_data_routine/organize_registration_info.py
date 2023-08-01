@@ -176,9 +176,6 @@ def transform_registration_info_to_sql(
     force_update: bool = False
 ) -> None:
     fund_last_updated = InvestmentFund.objects.latest('dt_updated')
-    if fund_last_updated.date() == timezone.today() and not force_update:
-        logging.info('Already update funds registration data today')
-        return None
     registration_info = pd.read_csv(
         raw_data_path + "\\" + "cad_fi.csv", encoding='latin1', sep=";",
         dtype=registration_info_dtypes

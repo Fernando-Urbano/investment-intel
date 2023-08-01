@@ -3,7 +3,7 @@ import re
 import requests
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta 
 import zipfile
 import pandas as pd
@@ -17,7 +17,8 @@ os.environ['PYDEVD_WARN_EVALUATION_TIMEOUT'] = '30'
 def download_funds_info(
     url_raw,
     raw_data_path="fundsintel\\funds_data_routine\\raw_data",
-    first_dt_comptc=None
+    first_dt_comptc=None,
+    first_year=None
 ):
     current_dir = os.getcwd()
     if raw_data_path:
@@ -34,6 +35,11 @@ def download_funds_info(
             d.strftime("%Y%m") for d
             in pd.date_range(start=first_dt_comptc, end=datetime.now().date(), freq='MS')
         ]
+        zip_csv_links = [l for l in zip_csv_links if any(folder in l for folder in selected_folders)]
+
+    if first_year:
+        first_year = int(first_year)
+        selected_folders = [str(d) for d in range(first_year, date.today().year + 1, 1)]
         zip_csv_links = [l for l in zip_csv_links if any(folder in l for folder in selected_folders)]
     
     current_file_number = 0
