@@ -4,6 +4,18 @@ This is the final project of the CS50 Web Development course with Django and Jav
 # What is it?
 This software is the MVP of a investment information provider for brazilian financial markets. The MVP contains registration and performance data of brazilians hedge funds and enables the user to analyze and compare the performance of any of the brazilian hedge funds registered in the CVM (brazilian agency responsible for hedge funds). 
 
+# Distinctiveness and Complexity
+## Distinctiveness
+The project is useful for a completely different scope than the other projects done in the course. While the other projects allowed the user to interact with other users, the investment intel focus on the interaction between the user and the data. As mentioned in the "What is it?" section, the project downloads and works with data from brazilian hedge funds and works with charts and external modules to provide calculation for the front-end.
+
+## Complexity
+The major points why this project has the necessary complexity to be approved:
+- It works with chartjs2, inside of React, specifying labels, colors, and graphic types.
+- It required to create download and organize data files from external source.
+- While django requires us to update the whole page, React and single page applications allow us to give a more dynamic and fluid perception for the user. To work well with React, I had to study `CS50 Beyond` videos in Youtube and Meta's React course in Coursera. I had to work with `useRef` and `useState` multiple times, passing those variables as props to internal compoents.
+- The data analytics part of the software allows us to dynamically change periods.
+- The application is "error proof" in the client and the server sides. If you try to collect data from a cnpj that is not on the database or if you try to add invalid start and end dates for the timeframe of the returns, it will alert you and still continue to work.  
+
 # How to run the application
 1) Clone the repository to your local machine in the desired folder.
 ```
@@ -72,3 +84,10 @@ It has the following parameters:
 - `period`: selected period of search (i.e. 1 month, 3 months, YTD). When the `period` is selected the `start_dt_comptc` and the `end_dt_comptc` are automatically specified as well.
 - `start_dt_comptc`: start date of the query.
 - `end_dt_comptc`: end date of the query.
+
+## layout.html
+Layout has the outer html of the application.
+
+## index.html
+index extends the layout.html file. It also contains the JS necessary for the application to run.
+
