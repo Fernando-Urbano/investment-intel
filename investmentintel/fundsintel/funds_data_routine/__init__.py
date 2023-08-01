@@ -6,9 +6,9 @@ from dateutil.relativedelta import relativedelta
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-funds_registration_info = {'download': False, 'update': False}
-funds_daily_info = {'download': False, 'update': False}
-funds_old_daily_info = {'download': False, 'update': True}
+funds_registration_info = {'download': True, 'update': True}
+funds_daily_info = {'download': True, 'update': True}
+funds_old_daily_info = {'download': True, 'update': True}
 
 # Funds Registration Information
 if funds_registration_info['download']:
