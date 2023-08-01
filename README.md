@@ -32,3 +32,33 @@ python fundsintel/funds_data_routine/__init__.py
 ```
 python manage.py runserver
 ```
+
+# Files
+## funds_data_routine
+### funds_data_routine/download_data.py
+This file has the connection with the CVM website using `BeautifulSoup`.
+
+### funds_data_routine/organize_daily_info.py
+This file creates the SQLite table for daily_info and puts the data from csv files into it. It always delete past data before adding new ones.
+
+### funds_data_routine/organize_registration_info.py
+This file adds data to the `InvestmentFund` django model. If a certain fund already has data, the file will update the fund's data steady of adding another model.
+
+## models.py
+Contains the django models `InvestmentFund` and `User`. With `get_data` method, it allows us to get data of a specific fund and with the `short_name` property we can show the name of the fund in a shorter way.
+
+## views.py
+### views.py -> index
+`index` function inside of views.py redirects the user to the main page of the application. The application works with only one page, but allows the user to view multiple funds due to React and the concept of SPA (Single Page Application).
+
+### views.py -> search_market_data
+Returns up to 10 funds that have the characters specified in the parameter "query". It called everytime the user writes a name inside of the search bar. In this way, the user can view the options he can select that most look like the funds he/she is searching.
+
+```
+@csrf_exempt
+def search_market_data(request):
+    data = json.loads(request.body)
+    query = data.get("query")
+    query_results = InvestmentFund.objects.filter(Q(name__icontains=query))[:10]
+    return JsonResponse({"query_results": [q.serialize() for q in query_results]}, safe=False)
+```
