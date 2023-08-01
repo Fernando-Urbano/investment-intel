@@ -1,61 +1,9 @@
-# investment-intel-br
+# Investment Intel
+This is the final project of the CS50 Web Development course with Django and JavaScript lectured by Harvard CS department.
 
-# d3.js
-A library for manipulating documents based on data.
+# What is it?
+This software is the MVP of a investment information provider for brazilian financial markets. The MVP contains registration and performance data of brazilians hedge funds and enables the user to analyze and compare the performance of any of the brazilian hedge funds registered in the CVM (brazilian agency responsible for hedge funds). 
 
-Allows to automatically render and rerender HTML.
+# How to run the Application
+1) Clone the repository to your local machine.
 
-After we reference the d3 in our links script, we start to manipulate the objec `d3` inside of the js code:
-
-```
-d3.select('div');
-```
-
-It uses `select` to select the div which will be used to add a data.
-
-```
-d3.select('div')
-    .selectAll('p');
-```
-
-Now, inside of the div, we select all paragraphs.
-
-If there are no paragraphs inside of the div, that is not a problem.
-
-```
-d3.select('div')
-    .selectAll('p')
-    .data([1, 2, 3]);
-```
-
-Finally, we put data inside of the elements selected. In this case, in each of the paragraphs.
-
-```
-d3.select('div')
-    .selectAll('p')
-    .data([1, 2, 3])
-    .enter();
-```
-
-The method enter than is used to binds the data to the object.
-
-```
-d3.select('div')
-    .selectAll('p')
-    .data([1, 2, 3])
-    .enter()
-    .append('p');
-```
-
-The append actually creates the paragraphs if it does exist.
-
-```
-d3.select('div')
-    .selectAll('p')
-    .data([1, 2, 3])
-    .enter()
-    .append('p')
-    .text(dta => dta);
-```
-
-Finally, we add a text to each of the paragraphs. We can do that with plain HTML or using a function.
