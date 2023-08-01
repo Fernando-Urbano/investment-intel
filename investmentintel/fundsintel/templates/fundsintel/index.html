@@ -9,6 +9,9 @@
             const searchBoxRef = React.useRef(null);
             const [selectedMarketData, setSelectedMarketData] = React.useState([]);
             const [queryMarketData, setQueryMarketData] = React.useState([])
+            const [analyticsParams, setAnalyticsParams] = React.useState({})
+            const [cumulativeReturnsData, setCumulativeReturnsData] = React.useState(null)
+            const [returnsData, setReturnsData] = React.useState(null)
 
             const MARKET_COLORS = [
                 "#CC0000", // dark red
@@ -33,6 +36,7 @@
             ];
 
             const addMarketData = (data) => {
+                console.log('%c App - addMarketData', 'color: red; font-weight: bold')
                 const id = data.cnpj;
                 const usedColors = selectedMarketData.map((info) => Object.values(info)[0].color);
                 const availableColors = MARKET_COLORS.filter((color) => !usedColors.includes(color));
@@ -43,30 +47,126 @@
                 }
 
                 const colorToAdd = availableColors[0];
-                setSelectedMarketData((prevState) => [
-                    ...prevState,
+                setSelectedMarketData((state) => [
+                    ...state,
                     { [id]: { data: data, color: colorToAdd } },
                 ]);
-                console.log(`Added "${id}" to selected market data with color "${colorToAdd}"`);
+                console.log(`Added "${id}" to selected market data with color "${colorToAdd}".`);
                 searchBoxRef.current.value = "";
                 setQueryMarketData([]);
+                
+                setAnalyticsParams((state) => {
+                    const cnpjs = state.cnpjs ? [...state.cnpjs, id] : [id];
+                    return { ...state, cnpjs: cnpjs };
+                })
+                console.log(`Added "${id}" to analytics parameters.`);
+            };
+
+            React.useEffect(() => {
+                console.log('%c App - useEffect for analyticsParams', 'color: red; font-weight: bold')
+                console.log("Change in analyticsParams triguerred API call to get cumulative returns data.")
+                getCumulativeReturnsData();
+            }, [analyticsParams]);
+
+            const getMarketData = (
+                cnpjs,
+                dataType = 'cumulative_returns',
+                period = null,
+                startDtComptc = null,
+                endDtComptc = null
+            ) => {
+                console.log('%c App - getMarketData', 'color: red; font-weight: bold')
+                console.log(`Made request for "${cnpjs}"`);
+                const data = {
+                    cnpjs: cnpjs,
+                    data_type: dataType,
+                    period: period,
+                    start_dt_comptc: startDtComptc,
+                    end_dt_comptc: endDtComptc
+                };
+                return fetch('/get-market-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    return data;
+                })
+                .catch(error => {
+                    console.error('Error fetching market data:', error);
+                    throw error;
+                });
+            };
+
+            const getCumulativeReturnsData = async () => {
+                console.log('%c App - getCumulativeReturnsData', 'color: red; font-weight: bold')
+                if (analyticsParams.cnpjs && analyticsParams.cnpjs.length > 0) {
+                    try {
+                        const data = await getMarketData(
+                            analyticsParams.cnpjs,
+                            'cumulative_returns',
+                            analyticsParams.period ? analyticsParams.period : null,
+                            analyticsParams.startDtComptc ? analyticsParams.startDtComptc : null,
+                            analyticsParams.endDtComptc ? analyticsParams.endDtComptc : null,
+                        );
+                        setCumulativeReturnsData(data);
+                        console.log('Updated cumulative returns data.');
+                    } catch (error) {
+                        console.error('Error fetching market data:', error);
+                    }
+                } else {
+                    console.log('Removed data from cumulative returns data.');
+                    setCumulativeReturnsData(null);
+                }
+            };
+
+            const getReturnsData = async () => {
+                console.log('%c App - getReturnsData', 'color: red; font-weight: bold')
+                if (analyticsParams.cnpjs && analyticsParams.cnpjs.length > 0) {
+                    try {
+                        const data = await getMarketData(
+                            analyticsParams.cnpjs,
+                            'returns',
+                            analyticsParams.period ? analyticsParams.period : null,
+                            analyticsParams.startDtComptc ? analyticsParams.startDtComptc : null,
+                            analyticsParams.endDtComptc ? analyticsParams.endDtComptc : null,
+                        );
+                        setReturnsData(data);
+                        console.log('Updated returns data.');
+                    } catch (error) {
+                        console.error('Error fetching market data:', error);
+                    }
+                } else {
+                    console.log('Removed data from returns data.');
+                    setReturnsData(null);
+                }
             };
 
             const removeMarketData = (id) => {
-                setSelectedMarketData((prevState) =>
-                    prevState.filter((item) => Object.keys(item)[0] !== id)
+                console.log('%c App - removeMarketData', 'color: red; font-weight: bold')
+                setSelectedMarketData((state) =>
+                    state.filter((item) => Object.keys(item)[0] !== id)
                 );
                 console.log(`Removed "${id}" from selected market data.`)
+
+                setAnalyticsParams((state) => {
+                    const cnpjs = state.cnpjs ? state.cnpjs.filter((cnpj) => cnpj !== id) : [];
+                    return { ...state, cnpjs: cnpjs };
+                });
+                console.log(`Removed "${id}" from analytics parameters.`)
             }
 
             const searchMarketData = () => {
+                console.log('%c App - searchMarketData', 'color: red; font-weight: bold')
                 const searchTerm = searchBoxRef.current.value;
-
                 if (searchTerm === ''){
                     setQueryMarketData([])
                     console.log(`Search term erased. No search required.`)
+                    return;
                 } else {
-                    console.log(`Searching for "${searchTerm}"...`)
                     const data = {
                         query: searchTerm
                     };
@@ -79,12 +179,15 @@
                     })
                     .then(response => response.json())
                     .then(results => {
-                        console.log(results);
+                        console.log(`Searched for "${searchTerm}".`)
                         setQueryMarketData(results.query_results)
+                        return;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching market data:', error);
+                        throw error;
                     });
                 }
-
-                return;
             }
 
             return (
@@ -95,6 +198,10 @@
                     addMarketData={addMarketData}
                     selectedMarketData={selectedMarketData}
                     removeMarketData={removeMarketData}
+                    cumulativeReturnsData={cumulativeReturnsData}
+                    returnsData={returnsData}
+                    setAnalyticsParams={setAnalyticsParams}
+                    analyticsParams={analyticsParams}
                 />
             );
         }
@@ -109,12 +216,18 @@
                         queryMarketData={props.queryMarketData}
                         addMarketData={props.addMarketData}
                     />
-                    <hr class="my-4"></hr>
+                    <hr className="my-2"></hr>
                     <SelectedSearch 
                         selectedMarketData={props.selectedMarketData}
                         removeMarketData={props.removeMarketData}
                     />
-                    <Graphic />
+                    <hr className="my-2"></hr>
+                    <Analytics
+                        cumulativeReturnsData={props.cumulativeReturnsData}
+                        selectedMarketData={props.selectedMarketData}
+                        setAnalyticsParams={props.setAnalyticsParams}
+                        analyticsParams={props.analyticsParams}
+                    />
                 </div>
             );
         }
@@ -144,9 +257,8 @@
 
         function SingleMarketData(props) {
             return(
-                <div class="form-control" onClick={() => props.addMarketData(props.data)}>
-                    <h6>{props.data.short_name}</h6>
-                    <span>{props.data.cnpj}</span>
+                <div className="form-control" onClick={() => props.addMarketData(props.data)}>
+                    <h6>{props.data.short_name} ({props.data.cnpj})</h6>
                 </div>
             )
         }
@@ -159,6 +271,7 @@
                             index={index}
                             info={info}
                             removeMarketData={props.removeMarketData}
+                            className="col-4"
                         />
                     ))}
                 </div>
@@ -169,35 +282,441 @@
             const info = Object.values(props.info)[0]
             const textStyle = {color: info.color};
             return(
-                <div class="form-control">
-                    <h3 style={textStyle}>{info.data.short_name}</h3>
-                    <h6 style={textStyle}>
-                        {info.data.cnpj}
-                    </h6>
+                <div className="form-control">
+                    <h6 style={textStyle}>{info.data.short_name} ({info.data.cnpj})</h6>
                     {info.data.class_cvm !== null && info.data.class_cvm.trim() !== "" && (
                         <h6>{info.data.class_cvm}</h6>
                     )}
-                    <div class="btn-group" role="group" aria-label="Basic example">
+                    <div className="btn-group" role="group" aria-label="Basic example">
                         <button
                             type="button"
-                            class="btn btn-primary"
+                            className="btn btn-primary"
                         >
                             View
                         </button>
                         <button
                             type="button"
-                            class="btn btn-secondary"
+                            className="btn btn-secondary"
                             onClick={() => props.removeMarketData(info.data.cnpj)}
                         >
                             Remove
                         </button>
                     </div>
+                    <button
+                        type="button"
+                        className="btn btn-primary"
+                    >
+                        Mark as Favorite
+                    </button>
                 </div>
             )
         }
 
-        function Graphic() {
-            return (<div></div>);
+        function Analytics(props) {
+            const [warningAssetsSelectedButNoDataFound, setWarningAssetsSelectedButNoDataFound] = React.useState(false)
+            const [assetsWithoutData, setAssetsWithoutData] = React.useState([]);
+
+            return (
+                <div>
+                    <AnalyticsParameters
+                        setAnalyticsParams={props.setAnalyticsParams}
+                        analyticsParams={props.analyticsParams}
+                    />
+                    <AnalyticsWarnings
+                        warningAssetsSelectedButNoDataFound={warningAssetsSelectedButNoDataFound}
+                        assetsWithoutData={assetsWithoutData}
+                    />
+                    <CumulativeReturnsGraphic
+                        cumulativeReturnsData={props.cumulativeReturnsData}
+                        selectedMarketData={props.selectedMarketData}
+                        warningAssetsSelectedButNoDataFound={warningAssetsSelectedButNoDataFound}
+                        setWarningAssetsSelectedButNoDataFound={setWarningAssetsSelectedButNoDataFound}
+                        assetsWithoutData={assetsWithoutData}
+                        setAssetsWithoutData={setAssetsWithoutData}
+                    />
+                </div>
+            );
+            // <ReturnsGraphic 
+            //     returnsData={props.returnsData}
+            //     selectedMarketData={props.selectedMarketData}
+            // />
+        }
+                
+        function AnalyticsParameters(props) {
+            const [selectedPeriod, setSelectedPeriod] = React.useState({
+                "1 month": false,
+                "MTD": false,
+                "3 months": false,
+                "6 months": false,
+                "YTD": false,
+                "12 months": false,
+                "2 years": false,
+                "5 years": false,
+                "Optimal": true,
+                "Since start": false,
+                "Personalized": false,
+            });
+            
+            const getTodayRef = (minusYears = 0) => {
+                const todayRef = new Date();
+                const refYear = todayRef.getFullYear() - minusYears;
+                const refMonth = String(todayRef.getMonth() + 1).padStart(2, "0");
+                const refDay = String(todayRef.getDate()).padStart(2, "0");
+                return `${refYear}-${refMonth}-${refDay}`;
+            };
+            
+            const [startDate, setStartDate] = React.useState(getTodayRef(5));
+            const [endDate, setEndDate] = React.useState(getTodayRef());
+            
+            const selectPeriod = (periodName) => {
+                console.log('%c AnalyticsParameters - selectedPeriod', 'color: red; font-weight: bold')
+                console.log(`Selected period ${periodName}`)
+                setSelectedPeriod((state) => {
+                    const updatedSelectedPeriod = {};
+                    Object.keys(state).forEach((key) => {
+                    updatedSelectedPeriod[key] = key === periodName;
+                    });
+                    console.log("analytics parameters:")
+                    console.log(props.analyticsParams)
+                    return updatedSelectedPeriod;
+                });
+                if (periodName === 'Personalized'){
+                    console.log(`Since Personalized periodName was chosen, added start date (${startDate}) and end date (${endDate}) to AnalyticsParams`)
+                    props.setAnalyticsParams((state) => ({
+                        ...state,
+                        period: periodName,
+                        startDtComptc: startDate,
+                        endDtComptc: endDate
+                    }));
+                } else {
+                    props.setAnalyticsParams((state) => ({
+                        ...state,
+                        period: periodName,
+                        startDtComptc: null,
+                        endDtComptc: null
+                    }));
+                }
+            };
+
+            return (
+                <div>
+                    <div className="btn-group" role="group" aria-label="Basic example">
+                        {Object.entries(selectedPeriod).map(([buttonName, buttonSelected]) => (
+                            <button
+                                key={buttonName}
+                                type="button"
+                                className={buttonSelected ? "btn btn-primary" : "btn btn-outline-secondary"}
+                                onClick={() => selectPeriod(buttonName)}
+                            >
+                                {buttonName}
+                            </button>
+                        ))}
+                    </div>
+                    {selectedPeriod["Personalized"] && (
+                        <PersonalizedAnalyticsParameters 
+                            startDate={startDate}
+                            setStartDate={setStartDate}
+                            endDate={endDate}
+                            setEndDate={setEndDate}
+                            getTodayRef={getTodayRef}
+                            selectPeriod={selectPeriod}
+                        />  
+                    )}
+                </div>
+            );
+        }
+
+        function PersonalizedAnalyticsParameters(props) {
+            const isValidDate = (dateString) => {
+                const dateObject = new Date(dateString);
+                return dateObject.toString() !== "Invalid Date";
+            }
+
+            const [warningDateMessage, setWarningDateMessage] = React.useState({invalidDate: false, startAfterEndDate: false})
+            
+            return (
+                <div className="form-group">
+                    <label htmlFor="personalized-start-date">Start date: </label>
+                    <input
+                        type="date"
+                        className="form-control"
+                        id="personalized-start-date"
+                        value={props.startDate}
+                        onChange={(e) => {
+                            props.setStartDate(e.target.value)
+                            if (isValidDate(e.target.value) && isValidDate(props.endDate)){
+                                setWarningDateMessage({invalidDate: false, startAfterEndDate: false});
+                            } else if (e.target.value < props.endDate && e.target.value < props.getTodayRef()){
+                                setWarningDateMessage({invalidDate: false, startAfterEndDate: true});
+                            }
+                        }}
+                    />
+                    <label htmlFor="personalized-end-date">End date: </label>
+                    <input
+                        type="date"
+                        className="form-control"
+                        id="personalized-end-date"
+                        value={props.endDate}
+                        onChange={(e) => {
+                            props.setEndDate(e.target.value)
+                            if (isValidDate(e.target.value) && isValidDate(props.startDate)){
+                                setWarningDateMessage({invalidDate: false, startAfterEndDate: false});
+                            } else if (e.target.value < props.endDate && e.target.value < props.getTodayRef()){
+                                setWarningDateMessage({invalidDate: false, startAfterEndDate: true});
+                            }
+                        }}
+                    />
+                    {warningDateMessage.startAfterEndDate && (
+                        <div className="alert alert-warning" role="alert">
+                            Start date ({props.startDate}) must be before end date ({props.endDate}) and before today
+                        </div>
+                    )}
+                    {warningDateMessage.invalidDate && (
+                        <div className="alert alert-warning" role="alert">
+                            Start date ({props.startDate}) or end date ({props.endDate}) is not in a valid format
+                        </div>
+                    )}
+                    <button
+                        key="selectPersonalized"
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => {
+                            if (!(isValidDate(props.startDate)) || !(isValidDate(props.startDate))){
+                                console.log('Start date or end date has invalid format')
+                                setWarningDateMessage({invalidDate: true, startAfterEndDate: false});
+                            } else if (props.startDate > props.endDate || props.startDate > new Date()){
+                                console.log('%c AnalyticsParameters - selectPersonalized button', 'color: red; font-weight: bold')
+                                console.log('Start date must be before end date and before today')
+                                setWarningDateMessage({invalidDate: false, startAfterEndDate: true});
+                            } else {
+                                setWarningDateMessage({invalidDate: false, startAfterEndDate: false});
+                                props.selectPeriod('Personalized')
+                            }
+                        }}
+                        disabled={warningDateMessage.invalidDate || warningDateMessage.startAfterEndDate}
+                    >
+                        Update
+                    </button>
+                </div>
+            );
+        }
+
+        function AnalyticsWarnings(props) {
+            return (
+                <div>  
+                    {props.warningAssetsSelectedButNoDataFound && (
+                        <div className="alert alert-warning" role="alert">
+                            <p>No data in selected period for any of the funds selected.</p>
+                            <p>Try to change the selected period or add other funds to comparison.</p>
+                        </div>
+                    )}
+                    {props.assetsWithoutData.length !== 0 && (
+                        <div className="alert alert-warning" role="alert">
+                            <p>No data available in selected period for:</p>
+                            <ul>
+                                {props.assetsWithoutData.map((asset) => (
+                                    <li key={asset}>{asset}</li>
+                                ))}
+                            </ul>
+                            <p>Try to change the selected period or add other funds to comparison.</p>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function CumulativeReturnsGraphic(props) {
+            const options = {
+                responsive: true,
+                legend: {
+                    display: false,
+                },
+                scales: {
+                    yAxes: [
+                        {
+                        ticks: {
+                            callback: function (value) {
+                                return (value * 100).toFixed(1) + '%'; 
+                            },
+                        },
+                        scaleLabel: {
+                            display: false,
+                            labelString: 'Returns',
+                        },
+                        },
+                    ],
+                },
+                elements: {
+                    point: {
+                        radius: 1,
+                    },
+                },
+            };  
+
+            const [chartData, setChartData] = React.useState({});
+
+            function changeColorAlpha(color, alpha) {
+                const colorWithoutHash = color.substring(1);
+                const red = parseInt(colorWithoutHash.substring(0, 2), 16);
+                const green = parseInt(colorWithoutHash.substring(2, 4), 16);
+                const blue = parseInt(colorWithoutHash.substring(4, 6), 16);
+                const validAlpha = Math.max(0, Math.min(1, alpha));
+                return `rgba(${red}, ${green}, ${blue}, ${validAlpha})`;
+            }
+
+            React.useEffect(() => {
+                console.log('%c CumulativeReturnsGraphic - useEffect for cumulativeReturnsData', 'color: red; font-weight: bold')
+                const assetToColor = Object.assign({}, ...props.selectedMarketData);
+                if (props.cumulativeReturnsData === null || props.cumulativeReturnsData.data.dt_comptc.length === 0) {
+                    if (props.cumulativeReturnsData && props.cumulativeReturnsData.data.dt_comptc.length === 0){
+                        props.setWarningAssetsSelectedButNoDataFound(true);
+                        console.log('Added warning saying that no data was found for any of the selected funds in the specified period.')
+                    } else {
+                        props.setWarningAssetsSelectedButNoDataFound(false);
+                    }
+                    setChartData({});
+                    console.log('Removed data from chart data because the API found no data');
+                    return;
+                }
+                
+                const datasets = [];
+                props.setWarningAssetsSelectedButNoDataFound(false);
+                props.setAssetsWithoutData([])
+                Object.keys(props.cumulativeReturnsData.data).forEach((marketDataKey) => {
+                    console.log('')
+                    if (marketDataKey !== 'dt_comptc') {
+                        if (props.cumulativeReturnsData.data[marketDataKey] !== "No data") {
+                            datasets.push({
+                                label: props.cumulativeReturnsData.information[marketDataKey].short_name,
+                                data: props.cumulativeReturnsData.data[marketDataKey],
+                                backgroundColor: changeColorAlpha(assetToColor[marketDataKey].color, 0),
+                                borderColor: assetToColor[marketDataKey].color,
+                                borderWidth: 2,
+                            });
+                        } else {
+                            props.setAssetsWithoutData((state) => [...state, props.cumulativeReturnsData.information[marketDataKey].short_name])
+                        }
+                    }
+                })
+
+                setChartData({
+                    labels: props.cumulativeReturnsData.data.dt_comptc,
+                    datasets: datasets,
+                });
+                console.log('Updated chart data for cumulative returns graphic.')
+            }, [props.cumulativeReturnsData]);
+    
+            return (
+                <div className="col-12">
+                    <h5>Cumulative Returns</h5>
+                    {chartData !== {} ? (
+                        <div className='d-flex flex-column align-items-center'>
+                            <ReactChartjs2.Line data={chartData} options={options} />
+                        </div>
+                    ) : (
+                        <div className='d-flex flex-column align-items-center'>
+                            <ReactChartjs2.Line options={options} />
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function ReturnsGraphic(props) {
+            const options = {
+                responsive: true,
+                legend: {
+                    display: false,
+                },
+                scales: {
+                    yAxes: [
+                        {
+                        ticks: {
+                            callback: function (value) {
+                                return (value * 100).toFixed(2) + '%'; 
+                            },
+                        },
+                        scaleLabel: {
+                            display: false,
+                            labelString: 'Returns',
+                        },
+                        },
+                    ],
+                },
+                elements: {
+                    point: {
+                        radius: 1,
+                    },
+                },
+            };  
+
+            const [chartData, setChartData] = React.useState({});
+
+            function changeColorAlpha(color, alpha) {
+                const colorWithoutHash = color.substring(1);
+                const red = parseInt(colorWithoutHash.substring(0, 2), 16);
+                const green = parseInt(colorWithoutHash.substring(2, 4), 16);
+                const blue = parseInt(colorWithoutHash.substring(4, 6), 16);
+                const validAlpha = Math.max(0, Math.min(1, alpha));
+                return `rgba(${red}, ${green}, ${blue}, ${validAlpha})`;
+            }
+
+            React.useEffect(() => {
+                console.log('%c ReturnsGraphic - useEffect for returnsData', 'color: red; font-weight: bold')
+                const assetToColor = Object.assign({}, ...props.selectedMarketData);
+                if (props.cumulativeReturnsData === null || props.cumulativeReturnsData.data.dt_comptc.length === 0) {
+                    if (props.cumulativeReturnsData && props.cumulativeReturnsData.data.dt_comptc.length === 0){
+                        props.setWarningAssetsSelectedButNoDataFound(true);
+                        console.log('Added warning saying that no data was found for any of the selected funds in the specified period.')
+                    } else {
+                        props.setWarningAssetsSelectedButNoDataFound(false);
+                    }
+                    setChartData({});
+                    console.log('Removed data from chart data because the API found no data');
+                    return;
+                }
+                
+                const datasets = [];
+                props.setWarningAssetsSelectedButNoDataFound(false);
+                props.setAssetsWithoutData([])
+                Object.keys(props.cumulativeReturnsData.data).forEach((marketDataKey) => {
+                    console.log('')
+                    if (marketDataKey !== 'dt_comptc') {
+                        if (props.cumulativeReturnsData.data[marketDataKey] !== "No data") {
+                            datasets.push({
+                                label: props.cumulativeReturnsData.information[marketDataKey].short_name,
+                                data: props.cumulativeReturnsData.data[marketDataKey],
+                                backgroundColor: changeColorAlpha(assetToColor[marketDataKey].color, 0),
+                                borderColor: assetToColor[marketDataKey].color,
+                                borderWidth: 2,
+                            });
+                        } else {
+                            props.setAssetsWithoutData((state) => [...state, props.cumulativeReturnsData.information[marketDataKey].short_name])
+                        }
+                    }
+                })
+
+                setChartData({
+                    labels: props.cumulativeReturnsData.data.dt_comptc,
+                    datasets: datasets,
+                });
+                console.log('Updated chart data for cumulative returns graphic.')
+            }, [props.cumulativeReturnsData]);
+    
+            return (
+                <div className="col-12">
+                    <h5>Cumulative Returns</h5>
+                    {chartData !== {} ? (
+                        <div className='d-flex flex-column align-items-center'>
+                            <ReactChartjs2.Line data={chartData} options={options} />
+                        </div>
+                    ) : (
+                        <div className='d-flex flex-column align-items-center'>
+                            <ReactChartjs2.Line options={options} />
+                        </div>
+                    )}
+                </div>
+            );
         }
 
         ReactDOM.render(<App />, document.getElementById("root"));

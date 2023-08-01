@@ -6,13 +6,12 @@
         <title>{% block title %}Funds Intel{% endblock %}</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
         <link href="{% static 'fundsintel/styles.css' %}" rel="stylesheet">
-        <link href='https://unpkg.com/css.gg@2.0.0/icons/css/menu.css' rel='stylesheet'>
     </head>
     <body>
         <nav class="col-flex navbar navbar-expand-lg">
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link app-title">Funds Intel</a>
+                    <a class="nav-link">Funds Intel</a>
                 </li>
                 <li class="nav-item">
                     <form class="form-inline">
@@ -20,23 +19,23 @@
                     </form>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link pages-title navbar-option">Compare</a>
+                    <a class="nav-link navbar-option">Compare</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link pages-title navbar-option">Tables</a>
+                    <a class="nav-link navbar-option">Tables</a>
                 </li>
                 <li class="nav-item">
                     {% if user.is_authenticated %}
-                        <a class="nav-link pages-title navbar-option">My Funds</a>
+                        <a class="nav-link navbar-option">My Funds</a>
                     {% else %}
-                        <a class="nav-link pages-title navbar-option">Login</a>
+                        <a class="nav-link navbar-option">Login</a>
                     {% endif %}
                 </li>
                 <li class="nav-item">
                     {% if user.is_authenticated %}
-                        <a class="nav-link pages-title navbar-option">Menu</a>
+                        <a class="nav-link navbar-option">Menu</a>
                     {% else %}
-                        <a class="nav-link pages-title navbar-option">Register</a>
+                        <a class="nav-link navbar-option">Register</a>
                     {% endif %}
                 </li>
             </ul>
@@ -54,4 +53,6 @@
     <script src="https://unpkg.com/react@17/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://unpkg.com/chart.js@2.7.1/dist/Chart.bundle.min.js"></script>
+    <script src="https://unpkg.com/react-chartjs-2@2.7.6/dist/react-chartjs-2.min.js"></script>
 {% endblock %}
