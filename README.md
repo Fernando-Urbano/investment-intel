@@ -48,10 +48,10 @@ This file adds data to the `InvestmentFund` django model. If a certain fund alre
 Contains the django models `InvestmentFund` and `User`. With `get_data` method, it allows us to get data of a specific fund and with the `short_name` property we can show the name of the fund in a shorter way.
 
 ## views.py
-### views.py -> index
+### views.py > index
 `index` function inside of views.py redirects the user to the main page of the application. The application works with only one page, but allows the user to view multiple funds due to React and the concept of SPA (Single Page Application).
 
-### views.py -> search_market_data
+### views.py > search_market_data
 Returns up to 10 funds that have the characters specified in the parameter "query". It called everytime the user writes a name inside of the search bar. In this way, the user can view the options he can select that most look like the funds he/she is searching.
 
 ```
@@ -62,3 +62,13 @@ def search_market_data(request):
     query_results = InvestmentFund.objects.filter(Q(name__icontains=query))[:10]
     return JsonResponse({"query_results": [q.serialize() for q in query_results]}, safe=False)
 ```
+
+### views.py > get_market_data
+The function `get_market_data` allows the user to get daily info on quota, returns, number of investors, AUM, and other specifications of the selected hedge funds.
+
+It has the following parameters:
+- `cnpjs`: the id for each of the hedge funds.
+- `data_type`: which kind of data is wanted.
+- `period`: selected period of search (i.e. 1 month, 3 months, YTD). When the `period` is selected the `start_dt_comptc` and the `end_dt_comptc` are automatically specified as well.
+- `start_dt_comptc`: start date of the query.
+- `end_dt_comptc`: end date of the query.
