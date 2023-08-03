@@ -96,3 +96,128 @@ Layout has the outer html of the application.
 ## index.html
 index extends the layout.html file. It also contains the JS necessary for the application to run.
 
+# React Components
+The SPA (Single Page Application) is composed of multiple React components. The whole application is inside the Comparator component which is later divided in three parts:
+
+```
+function Comparator(props) {
+    return (
+        <div>
+            <h1>Funds Intel</h1>
+            <div className="mr-3 ml-3 p-3">
+                <SearchBox
+                    searchBoxRef={props.searchBoxRef}
+                    searchMarketData={props.searchMarketData}
+                    queryMarketData={props.queryMarketData}
+                    addMarketData={props.addMarketData}
+                />
+                <hr className="my-2"></hr>
+                <SelectedSearch 
+                    selectedMarketData={props.selectedMarketData}
+                    removeMarketData={props.removeMarketData}
+                />
+                <hr className="my-2"></hr>
+                <Analytics
+                    cumulativeReturnsData={props.cumulativeReturnsData}
+                    selectedMarketData={props.selectedMarketData}
+                    setAnalyticsParams={props.setAnalyticsParams}
+                    analyticsParams={props.analyticsParams}
+                />
+            </div>
+        </div>
+    );
+}
+```
+
+## SearchBox
+The `SearchBox` component allows users to search for funds and add them to the comparison.
+
+```
+function SearchBox(props) {
+        return (
+            <div>
+                <input
+                    ref={props.searchBoxRef}
+                    onChange={props.searchMarketData}
+                    type="search"
+                    id="search-data"
+                    className="col-12 form-control"
+                    name="search"
+                    placeholder="Search..."
+                />
+                {props.queryMarketData.map((data, index) => (
+                    <SingleMarketData
+                        index={index}
+                        data={data}
+                        addMarketData={props.addMarketData}
+                    />
+                ))}
+            </div>
+        );
+    }
+```
+
+Each time a new letter is typed inside of the search input, the function `props.searchMarketData` is called, giving back the results of the function `search_market_data` in views.py:
+
+```
+# Search Market Data
+@csrf_exempt
+def search_market_data(request):
+    data = json.loads(request.body)
+    query = data.get("query")
+    query_results = InvestmentFund.objects.filter(Q(name__icontains=query))[:10]
+    return JsonResponse({"query_results": [q.serialize() for q in query_results]}, safe=False)
+```
+
+The `queryMarketData` is updated with the results of the `searchMarketData` and passed inside of the map. Each data is given a "method" to, on click, add that specific fund to the database:
+
+```
+function SingleMarketData(props) {
+    return(
+        <div className="form-control" onClick={() => props.addMarketData(props.data)}>
+            <h6>{props.data.short_name} ({props.data.cnpj})</h6>
+        </div>
+    )
+}
+```
+
+When called, the `addMarketData` assigns a color to that specific fund:
+
+```
+const addMarketData = (data) => {
+    console.log('%c App - addMarketData', 'color: red; font-weight: bold')
+    const id = data.cnpj;
+    const usedColors = selectedMarketData.map((info) => Object.values(info)[0].color);
+    const availableColors = MARKET_COLORS.filter((color) => !usedColors.includes(color));
+
+    if (availableColors.length === 0) {
+        console.log("No available colors.");
+        return;
+    }
+
+    const colorToAdd = availableColors[0];
+    setSelectedMarketData((state) => [
+        ...state,
+        { [id]: { data: data, color: colorToAdd } },
+    ]);
+    console.log(`Added "${id}" to selected market data with color "${colorToAdd}".`);
+    searchBoxRef.current.value = "";
+    setQueryMarketData([]);
+    
+    setAnalyticsParams((state) => {
+        const cnpjs = state.cnpjs ? [...state.cnpjs, id] : [id];
+        return { ...state, cnpjs: cnpjs };
+    })
+    console.log(`Added "${id}" to analytics parameters.`);
+};
+```
+
+The color is used to create the graphics, specify the color of the hedge fund title and deal with changes when one hedge fund is removed from the analysis and other funds stay.
+
+## SelectedSearch
+TODO: Explain SelectedSearch in detail
+
+## Analytics
+TODO: Explain Analytics in detail
+
+
