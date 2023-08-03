@@ -2,7 +2,8 @@
 This is the final project of the CS50 Web Development course with Django and JavaScript lectured by Harvard CS department.
 
 # Screencast
-Click on the image to be redirected to a video of the program working on youtube
+Click on the image to be redirected to a video of the program working on youtube.
+
 [<img width="574" alt="image" src="https://github.com/Fernando-Urbano/investment-intel/assets/99626376/a2f3228b-aba4-4610-a255-56115eef7536">](https://www.youtube.com/watch?v=r1-xU-xvvKA)
 
 # What is it?
